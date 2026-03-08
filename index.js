@@ -16,7 +16,7 @@ app.post('/convert', async (req, res) => {
   try {
     const { imageBase64, mimeType, apiKey } = req.body;
 
-    const createRes = await fetch('https://api.replicate.com/v1/models/lucataco/flux.1-controlnet-lineart-promeai/predictions', {
+    const createRes = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
