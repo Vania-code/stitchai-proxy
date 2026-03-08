@@ -16,14 +16,22 @@ app.post('/convert', async (req, res) => {
   try {
     const { imageBase64, mimeType, apiKey } = req.body;
 
+    // First get the latest version
+    const modelRes = await fetch('https://api.replicate.com/v1/models/lucataco/flux.1-controlnet-lineart-promeai', {
+      headers: { 'Authorization': `Bearer ${apiKey}` }
+    });
+    const modelData = await modelRes.json();
+    const version = modelData.latest_version?.id;
+    if (!version) return res.status(400).json({ error: 'Could not get model version' });
+
     const createRes = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'Prefer': 'wait'
       },
       body: JSON.stringify({
+        version: version,
         input: {
           control_image: `data:${mimeType};base64,${imageBase64}`,
           prompt: 'clean embroidery pattern line drawing, coloring book style, black outlines on white background, no fill, no color, no shading',
@@ -38,7 +46,6 @@ app.post('/convert', async (req, res) => {
     const prediction = await createRes.json();
     if (!createRes.ok) return res.status(400).json({ error: prediction.detail || JSON.stringify(prediction) });
 
-    // Poll until done if not already completed
     let result = prediction;
     let attempts = 0;
     while (result.status !== 'succeeded' && result.status !== 'failed' && attempts < 30) {
@@ -54,7 +61,7 @@ app.post('/convert', async (req, res) => {
 
     const output = Array.isArray(result.output) ? result.output[0] : result.output;
     if (!output) return res.status(500).json({ error: 'No output received' });
-    
+
     res.json({ imageUrl: output });
 
   } catch (err) {
@@ -65,4 +72,4 @@ app.post('/convert', async (req, res) => {
 app.get('/', (req, res) => res.send('StitchAI Proxy running!'));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Running on port ${PORT}`));
+app.listen(PORT, () => console.env(`Running on port ${PORT}`));
