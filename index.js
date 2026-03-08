@@ -58,7 +58,8 @@ app.post('/convert', async (req, res) => {
 
     if (result.status === 'failed') return res.status(500).json({ error: 'Generation failed: ' + result.error });
 
-    const output = Array.isArray(result.output) ? result.output[0] : result.output;
+    console.log('Output received:', JSON.stringify(result.output));
+const output = Array.isArray(result.output) ? result.output[0] : result.output;
     if (!output) return res.status(500).json({ error: 'No output received' });
 
     res.json({ imageUrl: output });
