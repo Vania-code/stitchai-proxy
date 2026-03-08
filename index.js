@@ -32,13 +32,13 @@ app.post('/convert', async (req, res) => {
       body: JSON.stringify({
         version: version,
         input: {
-          control_image: `data:${mimeType};base64,${imageBase64}`,
-          prompt: 'clean embroidery pattern line drawing, coloring book style, black outlines on white background, no fill, no color, no shading',
-          negative_prompt: 'color, fill, shading, realistic, photo, texture',
-          num_inference_steps: 28,
-          guidance_scale: 7.5,
-          controlnet_conditioning_scale: 1.0
-        }
+  control_image: `data:${mimeType};base64,${imageBase64}`,
+  prompt: 'black and white line art, bold clean outlines, coloring book page, white background, no fill, no gray, no texture, high contrast',
+  negative_prompt: 'color, shading, gray, texture, noise, photo, realistic, blurry, soft',
+  num_inference_steps: 35,
+  guidance_scale: 10,
+  controlnet_conditioning_scale: 1.5
+}
       })
     });
 
