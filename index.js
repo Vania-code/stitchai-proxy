@@ -16,7 +16,6 @@ app.post('/convert', async (req, res) => {
   try {
     const { imageBase64, mimeType, apiKey } = req.body;
 
-    // First get the latest version
     const modelRes = await fetch('https://api.replicate.com/v1/models/lucataco/flux.1-controlnet-lineart-promeai', {
       headers: { 'Authorization': `Bearer ${apiKey}` }
     });
@@ -72,4 +71,4 @@ app.post('/convert', async (req, res) => {
 app.get('/', (req, res) => res.send('StitchAI Proxy running!'));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.env(`Running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Running on port ${PORT}`));
