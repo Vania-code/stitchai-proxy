@@ -16,39 +16,45 @@ app.post('/convert', async (req, res) => {
   try {
     const { imageBase64, mimeType, apiKey } = req.body;
 
-    const createRes = await fetch('https://api.replicate.com/v1/predictions', {
+    const createRes = await fetch('https://api.replicate.com/v1/models/lucataco/flux.1-controlnet-lineart-promeai/predictions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
+        'Prefer': 'wait'
       },
       body: JSON.stringify({
-        version: 'aff48af9c68d162388d230a2ab003f68d2638d88b154d57be2dcab3b4b3f9aef',
         input: {
-          image: `data:${mimeType};base64,${imageBase64}`,
-          prompt: 'clean embroidery pattern, coloring book line art, black outlines on white background, no fill, no shading',
-          negative_prompt: 'color, shading, fill, texture, noise, photo, realistic',
-          num_inference_steps: 20,
+          control_image: `data:${mimeType};base64,${imageBase64}`,
+          prompt: 'clean embroidery pattern line drawing, coloring book style, black outlines on white background, no fill, no color, no shading',
+          negative_prompt: 'color, fill, shading, realistic, photo, texture',
+          num_inference_steps: 28,
+          guidance_scale: 7.5,
+          controlnet_conditioning_scale: 1.0
         }
       })
     });
 
     const prediction = await createRes.json();
-    if (!createRes.ok) return res.status(400).json({ error: prediction.detail });
+    if (!createRes.ok) return res.status(400).json({ error: prediction.detail || JSON.stringify(prediction) });
 
-    // Poll until done
+    // Poll until done if not already completed
     let result = prediction;
-    while (result.status !== 'succeeded' && result.status !== 'failed') {
+    let attempts = 0;
+    while (result.status !== 'succeeded' && result.status !== 'failed' && attempts < 30) {
       await new Promise(r => setTimeout(r, 2000));
       const pollRes = await fetch(`https://api.replicate.com/v1/predictions/${result.id}`, {
         headers: { 'Authorization': `Bearer ${apiKey}` }
       });
       result = await pollRes.json();
+      attempts++;
     }
 
-    if (result.status === 'failed') return res.status(500).json({ error: 'Generation failed' });
+    if (result.status === 'failed') return res.status(500).json({ error: 'Generation failed: ' + result.error });
 
     const output = Array.isArray(result.output) ? result.output[0] : result.output;
+    if (!output) return res.status(500).json({ error: 'No output received' });
+    
     res.json({ imageUrl: output });
 
   } catch (err) {
